@@ -1,30 +1,42 @@
 <script>
-	export let name;
+    import Tailwindcss from './Tailwindcss.svelte'
+    import SignUp from './routes/SignUp.svelte'
+    import SignIn from './routes/SignIn.svelte'
+    import ForgotPassword from './routes/ForgotPassword.svelte'
+    import {Button} from './components'
+
+    let user = null
+
+    const userbase = window.userbase
+    let initPromise = userbase.init({appId: '54f70513-7607-40db-96fb-c1851fbb1964'})
+        .then((session) => user = session.user)
+    
+    function signOut() {
+        initPromise = userbase.signOut()
+            .then(() => user = null)
+    }
+
+    let pagina = 'signup'
 </script>
 
-<main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
-</main>
+<Tailwindcss />
 
-<style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
 
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
-	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
-</style>
+<div class="container flex justify-center items-center h-screen w-screen mx-auto">
+    {#await initPromise}
+        Loading...
+    {:then _}
+        {#if user}
+            Holita, {user.username}!
+            <Button on:click={signOut}>Log out</Button>
+        {:else}
+            {#if pagina === 'signup'}
+                <SignUp {userbase} bind:user bind:initPromise bind:pagina />
+            {:else if pagina === 'signin'}
+                <SignIn {userbase} bind:user bind:initPromise bind:pagina />
+            {:else if pagina === 'forgot'}
+                <!-- <SignIn {userbase} bind:user bind:initPromise /> -->
+            {/if}
+        {/if}
+    {/await}
+</div>
